@@ -95,15 +95,16 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   });*/
 
   // find user first then modify log.
-  User.find({}, (err, user) => {
+  User.findById(id, (err, user) => {
     err
     ? console.log('finding err >>>> ', err)
     : (
-      console.log('user found >>>> ', user)
-      //user[log].push(excercise),
-      //console.log('pushing worked? >>>> ', user)
+      console.log('user found >>>> ', user, 'just the user.log >>>> ', user.log),
+      user.log.push(excercise), //maybe not make a log schema nor model just an object dat = req.body.date === '' ? date.now : date.now(req.body.date)
+      console.log('pushing worked? >>>> ', user)
       )
   });
+  // now save changes 
   res.end();
 });
 
