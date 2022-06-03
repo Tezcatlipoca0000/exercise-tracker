@@ -73,39 +73,37 @@ app.post('/api/users/', (req, res) => {
     The response returned from POST /api/users/:_id/exercises will be the user object with the exercise fields added. TODO
   */
 app.post('/api/users/:_id/exercises', (req, res) => {
-  console.log(req.body);
   let id = req.body[':_id'],
     desc = req.body.description,
     dur = req.body.duration,
     dat = req.body.date;
-  console.log('the variables >>> ', id, desc, dur, dat);
-  const excercise = new Log({
-    description: desc,
-    duration: dur,
-    date: dat,
-  });
-  console.log('the excercise obj. >>>> ', excercise);
-  /*excercise.save((err, data) => {
-    err
-    ? console.log('saving err >>> ', err)
-    : (
-        console.log('log saved >>>', data),
-        res.json(data);
-      );
-  });*/
 
-  // find user first then modify log.
+  console.log(new Date(dat));
+  if (new Date(dat) === 'Invalid Date' || isNaN(new Date(dat))) {
+    let today = new Date();
+    dat = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+  }
+  console.log('test >>>> ', dat);
   User.findById(id, (err, user) => {
-    err
-    ? console.log('finding err >>>> ', err)
-    : (
-      console.log('user found >>>> ', user, 'just the user.log >>>> ', user.log),
-      user.log.push(excercise), //maybe not make a log schema nor model just an object dat = req.body.date === '' ? date.now : date.now(req.body.date)
-      console.log('pushing worked? >>>> ', user)
-      )
+     if (err) {
+     res.json(err.message);
+     } else {
+      const newLog = {
+        description: desc,
+        duration: dur,
+        date: dat
+      };
+      const excercise = {
+        username: user.username,
+        description: desc,
+        duration: dur,
+        date: dat,
+        _id: id,
+      };
+      user.log.push(newLog);
+      res.json(excercise)
+     }  
   });
-  // now save changes 
-  res.end();
 });
 
 // >> 
