@@ -23,14 +23,14 @@ mongoose.connection.on('error', err => console.log('connection error >>>>> ', er
 
 // >> define schemas and models
 const userSchema = new Schema({
-  username: String,
+  username: {type: String, required: true},
   count: Number,
   log: [Schema.Types.Mixed],
 });
 const User = mongoose.model('User', userSchema);
 const logSchema = new Schema({
-  description: {type: String, maxLength: 50},
-  duration: Number,
+  description: {type: String, maxLength: 50, required: true},
+  duration: {type: Number, required: true},
   date: {type: Date, default: Date.now},
 });
 const Log = mongoose.model('Log', logSchema);
@@ -58,12 +58,7 @@ app.post('/api/users/', (req, res) => {
       log: []
     });
   user.save((err, data) => {
-    err 
-    ? console.log('saving err >>>> ', err) 
-    : (
-      console.log('user saved >>>> ', data), 
-      res.json({username: data.username, _id: data._id})
-      );
+    err ? res.json(err.message) : res.json({username: data.username, _id: data._id});
   });
 });
 
@@ -78,30 +73,53 @@ app.post('/api/users/:_id/exercises', (req, res) => {
     dur = req.body.duration,
     dat = req.body.date;
 
-  console.log(new Date(dat));
   if (new Date(dat) === 'Invalid Date' || isNaN(new Date(dat))) {
-    let today = new Date();
-    dat = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
-  }
-  console.log('test >>>> ', dat);
+    //let today = new Date();
+    //console.log('test1', today);
+    //dat = today.toDateString();
+    dat = new Date();
+    console.log('test2', dat);
+  } /*else {
+    console.log('test3', dat, typeof dat);
+    let x = new Date(dat);
+    dat = x;
+    console.log('test3.2', dat, typeof dat);
+  }*/
   User.findById(id, (err, user) => {
      if (err) {
      res.json(err.message);
      } else {
-      const newLog = {
+      // maybe do use the log schema to capture validation on save and throw err
+      /*const newLog = {
         description: desc,
         duration: dur,
         date: dat
-      };
-      const excercise = {
+      };*/
+      console.log('test4', dat);
+      const newLog = new Log({
+        description: desc,
+        duration: dur,
+        date: dat
+      });
+      /*const excercise = {
         username: user.username,
         description: desc,
         duration: dur,
         date: dat,
         _id: id,
-      };
+      };*/
+      user.count++;
       user.log.push(newLog);
-      res.json(excercise)
+      user.save((err, data) => {
+        if (err) {
+          console.log('saving err >>', err);
+          res.json(err);
+        } else {
+          console.log('changes saved >>>', data);
+          let x = data.count;
+          res.json({username: data.username, _id: data.id, description: data.log[x-1].description, duration: data.log[x-1].duration, date: (data.log[x-1].date).toLocaleDateString(undefined, {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})});
+        }
+      });
      }  
   });
 });
@@ -114,12 +132,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   */
 app.get('/api/users', (req, res) => {
   User.find({}, 'username _id', (err, docs) => {
-    err
-    ? console.log('finding err >>>>> ', err)
-    : (
-      console.log('all docs >>>>> ', docs),
-      res.json(docs)
-      );
+    err ? res.json(err.message) : res.json(docs);
   });
 });
 
