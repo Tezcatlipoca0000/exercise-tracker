@@ -22,18 +22,27 @@ mongoose.connect(mongoUri, mongoOpt).then(
 mongoose.connection.on('error', err => console.log('connection error >>>>> ', err));
 
 // >> define schemas and models
-const userSchema = new Schema({
-  username: {type: String, required: true},
-  count: Number,
-  log: [Schema.Types.Mixed],
-});
-const User = mongoose.model('User', userSchema);
 const logSchema = new Schema({
   description: {type: String, maxLength: 50, required: true},
   duration: {type: Number, required: true},
-  date: {type: Date, default: Date.now},
+  date: {
+    type: Date, 
+    default: () => {
+      //if (this.null) {
+        let x = new Date();
+        return x.toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',});
+      //}
+    },
+  },
 });
 const Log = mongoose.model('Log', logSchema);
+const userSchema = new Schema({
+  username: {type: String, required: true},
+  count: Number,
+  log: [logSchema],
+});
+const User = mongoose.model('User', userSchema);
+
 
 
 app.use(cors());
@@ -67,12 +76,14 @@ app.post('/api/users/', (req, res) => {
     You can POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied, the current date will be used. TODO
     The response returned from POST /api/users/:_id/exercises will be the user object with the exercise fields added. TODO
   */
+// {"username":"tezcatlipoca","_id":"629b9b0311aaea26877acaed"} >> MINE
+// {"username":"tezcatlipoca","_id":"629b9c828413530938cc4700"} >> FCC
 app.post('/api/users/:_id/exercises', (req, res) => {
   let id = req.body[':_id'],
     desc = req.body.description,
     dur = req.body.duration,
     dat = req.body.date;
-
+  console.log('the variables >>>>', id, desc, dur, 'dur-typeof >>>', typeof dur, dat);
   if (new Date(dat) === 'Invalid Date' || isNaN(new Date(dat))) {
     //let today = new Date();
     //console.log('test1', today);
@@ -97,9 +108,9 @@ app.post('/api/users/:_id/exercises', (req, res) => {
       };*/
       console.log('test4', dat);
       const newLog = new Log({
-        description: desc,
-        duration: dur,
-        date: dat
+        description: req.body.description,
+        duration: Number(req.body.duration),
+        date: req.body.date
       });
       /*const excercise = {
         username: user.username,
@@ -110,18 +121,30 @@ app.post('/api/users/:_id/exercises', (req, res) => {
       };*/
       user.count++;
       user.log.push(newLog);
+      console.log('the newLog obj >>>>', newLog);
       user.save((err, data) => {
         if (err) {
-          console.log('saving err >>', err);
-          res.json(err);
+          console.log('saving err >>', err.message, 'and the newLog obj >>>', newLog, 'the user-obj >>>', user);
+          res.json(err.message);
         } else {
           console.log('changes saved >>>', data);
-          let x = data.count;
-          res.json({username: data.username, _id: data.id, description: data.log[x-1].description, duration: data.log[x-1].duration, date: (data.log[x-1].date).toLocaleDateString(undefined, {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})});
+          //let x = data.count;
+          //res.json({username: data.username, _id: data.id, description: data.log[x-1].description, duration: data.log[x-1].duration, date: data.log[x-1].date});
+          res.json(data);
         }
       });
      }  
   });
+
+  /*User.findById(id, (err, user) => {
+    if (err) {
+      res.json(err.message);
+    } else {
+      console.log('hey listen!! >>>', user);
+      res.json(user);
+    }
+  });*/
+
 });
 
 // >> 
