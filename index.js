@@ -26,7 +26,7 @@ const logSchema = new Schema({
   description: {type: String, maxLength: 50, required: true},
   duration: {type: Number, required: true},
   date: {
-    type: Date, 
+    type: String, 
     default: () => {
       //if (this.null) {
         let x = new Date();
@@ -42,7 +42,6 @@ const userSchema = new Schema({
   log: [logSchema],
 });
 const User = mongoose.model('User', userSchema);
-
 
 
 app.use(cors());
@@ -76,75 +75,25 @@ app.post('/api/users/', (req, res) => {
     You can POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied, the current date will be used. TODO
     The response returned from POST /api/users/:_id/exercises will be the user object with the exercise fields added. TODO
   */
-// {"username":"tezcatlipoca","_id":"629b9b0311aaea26877acaed"} >> MINE
+// {"username":"Tezcatlipoca","_id":"629c0ba1fca51c80c668bb47"} >> MINE
 // {"username":"tezcatlipoca","_id":"629b9c828413530938cc4700"} >> FCC
 app.post('/api/users/:_id/exercises', (req, res) => {
-  let id = req.body[':_id'],
-    desc = req.body.description,
-    dur = req.body.duration,
-    dat = req.body.date;
-  console.log('the variables >>>>', id, desc, dur, 'dur-typeof >>>', typeof dur, dat);
-  if (new Date(dat) === 'Invalid Date' || isNaN(new Date(dat))) {
-    //let today = new Date();
-    //console.log('test1', today);
-    //dat = today.toDateString();
-    dat = new Date();
-    console.log('test2', dat);
-  } /*else {
-    console.log('test3', dat, typeof dat);
-    let x = new Date(dat);
-    dat = x;
-    console.log('test3.2', dat, typeof dat);
-  }*/
-  User.findById(id, (err, user) => {
+  User.findById(req.body[':_id'], (err, user) => {
      if (err) {
      res.json(err.message);
      } else {
-      // maybe do use the log schema to capture validation on save and throw err
-      /*const newLog = {
-        description: desc,
-        duration: dur,
-        date: dat
-      };*/
-      console.log('test4', dat);
       const newLog = new Log({
         description: req.body.description,
         duration: Number(req.body.duration),
         date: req.body.date
       });
-      /*const excercise = {
-        username: user.username,
-        description: desc,
-        duration: dur,
-        date: dat,
-        _id: id,
-      };*/
       user.count++;
       user.log.push(newLog);
-      console.log('the newLog obj >>>>', newLog);
       user.save((err, data) => {
-        if (err) {
-          console.log('saving err >>', err.message, 'and the newLog obj >>>', newLog, 'the user-obj >>>', user);
-          res.json(err.message);
-        } else {
-          console.log('changes saved >>>', data);
-          //let x = data.count;
-          //res.json({username: data.username, _id: data.id, description: data.log[x-1].description, duration: data.log[x-1].duration, date: data.log[x-1].date});
-          res.json(data);
-        }
+        err ? res.json(err.message) : res.json(data);
       });
      }  
   });
-
-  /*User.findById(id, (err, user) => {
-    if (err) {
-      res.json(err.message);
-    } else {
-      console.log('hey listen!! >>>', user);
-      res.json(user);
-    }
-  });*/
-
 });
 
 // >> 
