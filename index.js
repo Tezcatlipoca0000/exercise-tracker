@@ -24,7 +24,7 @@ mongoose.connection.on('error', err => console.log('connection error >>>>> ', er
 // >> define schemas and models
 const logSchema = new Schema({
   description: {type: String, maxLength: 50, required: true},
-  duration: {type: Number, required: true},
+  duration: {type: Number, min: 1, required: true},
   date: {
     type: String, 
     default: () => {
@@ -75,7 +75,7 @@ app.post('/api/users/', (req, res) => {
     You can POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied, the current date will be used. TODO
     The response returned from POST /api/users/:_id/exercises will be the user object with the exercise fields added. TODO
   */
-// {"username":"Tezcatlipoca","_id":"629c0ba1fca51c80c668bb47"} >> MINE
+// {"username":"Tezcatlipoca","_id":"629cdb96df13395b4264dd90"} >> MINE
 // {"username":"tezcatlipoca","_id":"629b9c828413530938cc4700"} >> FCC
 app.post('/api/users/:_id/exercises', (req, res) => {
   User.findById(req.body[':_id'], (err, user) => {
@@ -84,13 +84,18 @@ app.post('/api/users/:_id/exercises', (req, res) => {
      } else {
       const newLog = new Log({
         description: req.body.description,
-        duration: Number(req.body.duration),
+        duration: req.body.duration,
         date: req.body.date
       });
       user.count++;
       user.log.push(newLog);
       user.save((err, data) => {
-        err ? res.json(err.message) : res.json(data);
+        if (err) {
+          res.json(err.message)
+        } else {
+          let x = data.log[data.count - 1];
+          res.json({_id: data._id, username: data.username, date: x.date, duration: x.duration, description: x.description})
+        } 
       });
      }  
   });
