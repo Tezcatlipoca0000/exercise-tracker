@@ -25,6 +25,13 @@ mongoose.connection.on('error', err => console.log('connection error >>>>> ', er
 const logSchema = new Schema({
   description: {type: String, maxLength: 50, required: true},
   duration: {type: Number, min: 1, required: true},
+  date: {type: Date, default: Date.now}
+
+  /*
+  date: {type: Date, default: () => new Date()}
+  */
+  
+  /*
   date: {
     type: String, 
     default: () => {
@@ -34,6 +41,7 @@ const logSchema = new Schema({
       //}
     },
   },
+  */
 });
 const Log = mongoose.model('Log', logSchema);
 const userSchema = new Schema({
@@ -78,6 +86,29 @@ app.post('/api/users/', (req, res) => {
 // {"username":"Tezcatlipoca","_id":"629cdb96df13395b4264dd90"} >> MINE
 // {"username":"tezcatlipoca","_id":"629b9c828413530938cc4700"} >> FCC
 app.post('/api/users/:_id/exercises', (req, res) => {
+  let dat,
+    x = new Date(req.body.date),
+    y = Date.parse(req.body.date);
+    console.log(dat, x, y);
+  if (req.body.date === '') {
+    dat = undefined;
+  } else {
+    dat = req.body.date;
+  }
+
+  /*
+  let dat,
+    x = new Date(req.body.date),
+    y = Date.parse(req.body.date);
+    console.log(dat, x, y);
+  if (req.body.date === '') {
+    dat = undefined;
+  } else if (x === 'Invalid Date' || isNan(y)) {
+    dat = null;
+  } else {
+    dat = req.body.date;
+  }
+  */
   User.findById(req.body[':_id'], (err, user) => {
      if (err) {
      res.json(err.message);
@@ -85,7 +116,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
       const newLog = new Log({
         description: req.body.description,
         duration: req.body.duration,
-        date: req.body.date
+        date: dat
       });
       user.count++;
       user.log.push(newLog);
@@ -94,7 +125,13 @@ app.post('/api/users/:_id/exercises', (req, res) => {
           res.json(err.message)
         } else {
           let x = data.log[data.count - 1];
-          res.json({_id: data._id, username: data.username, date: x.date, duration: x.duration, description: x.description})
+          res.json({
+            _id: data._id, 
+            username: data.username, 
+            date: x.date.toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',}), 
+            duration: x.duration, 
+            description: x.description
+          });
         } 
       });
      }  
@@ -119,15 +156,6 @@ app.get('/api/users/:_id', (req, res) => {
 });
 
 
-
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
 });
-
-
-// >>
-//const uniqueID = () => {
-//  const time = (new Date().getTime() / 1000 | 0).toString(16);
-//  const suffix = 'xxxxxxxxxxxxxxxx'.replace(/[x]/g, () => (Math.random() * 16 | 0).toString(16)).toLowerCase();
-//  return `${time}${suffix}`;
-//};
