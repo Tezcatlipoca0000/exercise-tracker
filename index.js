@@ -21,11 +21,18 @@ mongoose.connect(mongoUri, mongoOpt).then(
 );
 mongoose.connection.on('error', err => console.log('connection error >>>>> ', err));
 
+// >> a date validator function
+function validator (d) {
+  if (d === '') return undefined
+  if (new Date(d) === 'Invalid Date' || isNan(Date.parse(d))) return false
+  if (new Date(d) !== 'Invalid Date' && !isNan(Date.parse(d))) return true
+}
+
 // >> define schemas and models
 const logSchema = new Schema({
   description: {type: String, maxLength: 50, required: true},
   duration: {type: Number, min: 1, required: true},
-  date: {type: Date, default: Date.now}
+  date: {type: Date, default: Date.now, validate: validator}
 
   /*
   date: {type: Date, default: () => new Date()}
@@ -86,7 +93,7 @@ app.post('/api/users/', (req, res) => {
 // {"username":"Tezcatlipoca","_id":"629cdb96df13395b4264dd90"} >> MINE
 // {"username":"tezcatlipoca","_id":"629b9c828413530938cc4700"} >> FCC
 app.post('/api/users/:_id/exercises', (req, res) => {
-  let dat,
+  /*let dat,
     x = new Date(req.body.date),
     y = Date.parse(req.body.date);
     console.log(dat, x, y);
@@ -94,7 +101,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
     dat = undefined;
   } else {
     dat = req.body.date;
-  }
+  }*/
 
   /*
   let dat,
@@ -116,7 +123,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
       const newLog = new Log({
         description: req.body.description,
         duration: req.body.duration,
-        date: dat
+        date: req.body.date
       });
       user.count++;
       user.log.push(newLog);
@@ -128,7 +135,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
           res.json({
             _id: data._id, 
             username: data.username, 
-            date: x.date.toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',}), 
+            date: x.date.toDateString(), //toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',}), 
             duration: x.duration, 
             description: x.description
           });
