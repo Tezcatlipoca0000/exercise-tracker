@@ -23,9 +23,19 @@ mongoose.connection.on('error', err => console.log('connection error >>>>> ', er
 
 // >> a date validator function
 function validator (d) {
-  if (d === '') return undefined
-  if (new Date(d) === 'Invalid Date' || isNan(Date.parse(d))) return false
-  if (new Date(d) !== 'Invalid Date' && !isNan(Date.parse(d))) return true
+  console.log('validator-input ¿¿¡¡', d)
+  if (d === '') {
+    console.log('validator-emptyInput')
+    return new Date()
+  }
+  if (new Date(d) === 'Invalid Date' || isNan(Date.parse(d))) {
+    console.log('validator-invalidInput')
+    return false
+  } 
+  if (new Date(d) !== 'Invalid Date' && !isNan(Date.parse(d))) {
+    console.log('validator-valid')
+    return true
+  } 
 }
 
 // >> define schemas and models
@@ -90,7 +100,7 @@ app.post('/api/users/', (req, res) => {
     You can POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied, the current date will be used. TODO
     The response returned from POST /api/users/:_id/exercises will be the user object with the exercise fields added. TODO
   */
-// {"username":"Tezcatlipoca","_id":"629cdb96df13395b4264dd90"} >> MINE
+// {"username":"Tezcatlipoca","_id":"62a7858e2d9a2e803f597d15"} >> MINE
 // {"username":"tezcatlipoca","_id":"629b9c828413530938cc4700"} >> FCC
 app.post('/api/users/:_id/exercises', (req, res) => {
   /*let dat,
