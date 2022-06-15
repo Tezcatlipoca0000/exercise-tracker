@@ -23,11 +23,7 @@ mongoose.connection.on('error', err => console.log('connection error >>>>> ', er
 
 // >> a date validator function
 function validator (d) {
-  console.log('validator-input ¿¿¡¡', d)
-  if (d === '') {
-    console.log('validator-emptyInput')
-    return new Date()
-  }
+  console.log('validator-input >>>>', d)
   if (new Date(d) === 'Invalid Date' || isNan(Date.parse(d))) {
     console.log('validator-invalidInput')
     return false
@@ -100,7 +96,7 @@ app.post('/api/users/', (req, res) => {
     You can POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied, the current date will be used. TODO
     The response returned from POST /api/users/:_id/exercises will be the user object with the exercise fields added. TODO
   */
-// {"username":"Tezcatlipoca","_id":"62a7858e2d9a2e803f597d15"} >> MINE
+// {"username":"Tezcatlipoca","_id":"62a902fe544e4057cb98406c"} >> MINE
 // {"username":"tezcatlipoca","_id":"629b9c828413530938cc4700"} >> FCC
 app.post('/api/users/:_id/exercises', (req, res) => {
   /*let dat,
@@ -133,13 +129,14 @@ app.post('/api/users/:_id/exercises', (req, res) => {
       const newLog = new Log({
         description: req.body.description,
         duration: req.body.duration,
-        date: req.body.date
+        date: req.body.date === '' ? undefined : req.body.date
       });
       user.count++;
       user.log.push(newLog);
       user.save((err, data) => {
         if (err) {
-          res.json(err.message)
+          console.log('saving error >>>', err);
+          res.json(err.message);
         } else {
           let x = data.log[data.count - 1];
           res.json({
