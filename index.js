@@ -21,18 +21,6 @@ mongoose.connect(mongoUri, mongoOpt).then(
 );
 mongoose.connection.on('error', err => console.log('connection error >>>>> ', err));
 
-// >> a date validator function
-function validator (d) {
-  console.log('validator-input >>>>', d)
-  
-  if (new Date(d) !== 'Invalid Date' && !isNan(Date.parse(d))) {
-    console.log('validator-valid')
-    return true
-  } else {
-    return false
-  }
-}
-
 // >> define schemas and models
 const logSchema = new Schema({
   description: {type: String, maxLength: 50, required: true},
@@ -45,7 +33,6 @@ const userSchema = new Schema({
   username: {type: String, required: true},
   count: Number,
   log: [logSchema],
-  //_id: String,
 });
 const User = mongoose.model('User', userSchema);
 
@@ -97,7 +84,9 @@ app.post('/api/users/:_id/exercises', (req, res) => {
     update = {$push: {log: newLog}, $inc: {count: 1}},
     // fields: '_id username log.date log.duration log.description'
     // fields: {username: 1, count: 0, log: {$slice: -1, _id: 0}, 'log.$': 1}
-    options = {new: true, fields: {username: 1, count: 0, $last: log} };
+    // fields: {username: 1, count: 0, $last: {log: 1}}
+    // fields: {username: 1, count: 0, $arrayElemAt: [log, -1] }
+    options = {new: true, fields: {username: 1, count: 0, 'log': {$slice: -1} } };
   User.findOneAndUpdate(conditions, update, options, (err, doc) =>{
     if (err) {
       res.json(err.message);
