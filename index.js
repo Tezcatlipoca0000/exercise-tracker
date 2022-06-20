@@ -74,6 +74,28 @@ app.post('/api/users/', (req, res) => {
   
 // {"username":"Tezcatlipoca","_id":"62abdac9b52242ec5a512173"} >> MINE
 // {"username":"tezcatlipoca","_id":"629b9c828413530938cc4700"} >> FCC
+
+/*
+MINE >>
+  
+_id "62abdac9b52242ec5a512173"
+username  "Tezcatlipoca"
+log 
+0 
+description "rtrtrtr"
+duration  777
+date  "2022-06-19T21:07:30.871Z"
+_id "62af901244025e6680e459fa"
+
+
+FCC >>
+  
+_id "629b9c828413530938cc4700"
+username  "tezcatlipoca"
+date  "Sun Jun 19 2022"
+duration  999
+description "tttttttt"
+*/
 app.post('/api/users/:_id/exercises', (req, res) => {
   const newLog = new Log({
     description: req.body.description,
@@ -86,7 +108,28 @@ app.post('/api/users/:_id/exercises', (req, res) => {
     // fields: {username: 1, count: 0, log: {$slice: -1, _id: 0}, 'log.$': 1}
     // fields: {username: 1, count: 0, $last: {log: 1}}
     // fields: {username: 1, count: 0, $arrayElemAt: [log, -1] }
-    options = {new: true, fields: {username: 1, count: 0, 'log': {$slice: -1} } };
+    /* 
+    fields: {
+        username: 1, 
+        count: 0, 
+        'log': {$slice: -1},
+        'log.date': 1,
+        'log.duration': 1,
+        'log.description': 1,
+        'log._id': 0,
+      } 
+    */
+    options = {
+      new: true, 
+      fields: {
+        username: 1, 
+        count: 0, 
+        log: { $elemMatch: {
+
+        } }, 
+        'log.$': 1
+      } 
+    };
   User.findOneAndUpdate(conditions, update, options, (err, doc) =>{
     if (err) {
       res.json(err.message);
