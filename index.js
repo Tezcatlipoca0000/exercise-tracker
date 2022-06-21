@@ -59,7 +59,7 @@ app.post('/api/users/', (req, res) => {
       log: []
     });
   user.save((err, data) => {
-    err ? res.json(err.message) : res.json({username: data.username, _id: data._id});
+    err ? res.json(err.message) : (console.log('doc saved!!', data), res.json({username: data.username, _id: data._id}));
   });
 });
 
@@ -72,7 +72,7 @@ app.post('/api/users/', (req, res) => {
     //You can POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied, the current date will be used. DONE
     //The response returned from POST /api/users/:_id/exercises will be the user object with the exercise fields added. TODO
   
-// {"username":"Tezcatlipoca","_id":"62abdac9b52242ec5a512173"} >> MINE
+// {"username":"Tezcatlipoca","_id":"62b12d19393c3008702bcb47"} >> MINE
 // {"username":"tezcatlipoca","_id":"629b9c828413530938cc4700"} >> FCC
 
 /*
@@ -102,46 +102,35 @@ app.post('/api/users/:_id/exercises', (req, res) => {
     duration: req.body.duration,
     date: new Date(req.body.date) 
     }),
-    conditions = {_id: req.body[':_id']},
+    conditions = {_id: req.params._id},
     update = {$push: {log: newLog}, $inc: {count: 1}},
-    // fields: '_id username log.date log.duration log.description'
-    // fields: {username: 1, count: 0, log: {$slice: -1, _id: 0}, 'log.$': 1}
-    // fields: {username: 1, count: 0, $last: {log: 1}}
-    // fields: {username: 1, count: 0, $arrayElemAt: [log, -1] }
-    /* 
-    fields: {
-        username: 1, 
-        count: 0, 
-        'log': {$slice: -1},
-        'log.date': 1,
-        'log.duration': 1,
-        'log.description': 1,
-        'log._id': 0,
-      } 
-    */
     options = {
       new: true, 
       fields: {
         username: 1, 
         count: 0, 
-        log: { $elemMatch: {
-
-        } }, 
-        'log.$': 1
+        'log': {$slice: -1},
       } 
-    };
+    }; 
   User.findOneAndUpdate(conditions, update, options, (err, doc) =>{
     if (err) {
+      console.log('error found!', err);
       res.json(err.message);
+    } else if (doc === null) {
+      console.log('doc is null', doc, 'id is>>', req.params._id, 'the req.body2', req.body);
+      res.json({'error': 'User does not exist'});
     } else {
-      if (doc === null) {
-        res.json({'error': 'User does not exist'})
-      } else {
-        console.log(doc);
-        res.json(doc);
-      }
+      console.log('document updated!', doc);
+      res.json({
+        _id: doc._id, 
+        username: doc.username,
+        date: doc.log[0].date.toDateString(),
+        duration: doc.log[0].duration, 
+        description: doc.log[0].description,
+      });
     }
   });
+});
  
   /*User.findById(req.body[':_id'], (err, user) => {
      if (err) {
@@ -177,8 +166,8 @@ app.post('/api/users/:_id/exercises', (req, res) => {
         });
       }
     }  
-  }); */
-});
+  }); 
+});*/
 
 // >> 
   
