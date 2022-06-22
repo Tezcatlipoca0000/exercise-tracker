@@ -22,13 +22,6 @@ app.get('/', (req, res) => {
 // >> basic config
 app.use(bodyParser.urlencoded({extended: false}));
 
-// >> conect to db
-mongoose.connect(mongoUri, mongoOpt).then(
-  () => console.log('connection successful'),
-  err => console.log('connecting error >>>>>', err)
-);
-mongoose.connection.on('error', err => console.log('connection error >>>>> ', err));
-
 // >> define schemas and models
 const logSchema = new Schema({
   description: {type: String, maxLength: 50, required: true},
@@ -43,6 +36,16 @@ const userSchema = new Schema({
   log: [logSchema],
 });
 const User = mongoose.model('User', userSchema);
+
+// >> conect to db
+mongoose.connect(mongoUri, mongoOpt).then(
+  () => console.log('connection successful'),
+  err => console.log('connecting error >>>>>', err)
+);
+mongoose.connection.on('error', err => console.log('connection error >>>>> ', err));
+
+// {"username":"Tezcatlipoca","_id":"62b26aa37bd40ffe6e9f4db0"} >> MINE
+// {"username":"tezcatlipoca","_id":"629b9c828413530938cc4700"} >> FCC
 
 // >> 
    
@@ -59,42 +62,28 @@ app.post('/api/users/', (req, res) => {
     err ? res.json(err.message) : (console.log('doc saved!!', data), res.json({username: data.username, _id: data._id}));
   });
 });
+
+// >> 
   
     //You can POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied, the current date will be used. DONE
-    //The response returned from POST /api/users/:_id/exercises will be the user object with the exercise fields added. TODO
-  
-// {"username":"Tezcatlipoca","_id":"62b26aa37bd40ffe6e9f4db0"} >> MINE
-// {"username":"tezcatlipoca","_id":"629b9c828413530938cc4700"} >> FCC
+    //The response returned from POST /api/users/:_id/exercises will be the user object with the exercise fields added. DONE
 
 app.post('/api/users/:_id/exercises', (req, res) => {
-  console.log('test begin');
-  console.log('2022-6-1', new Date('2022-6-1'), Date.parse('2022-6-1'), (new Date('2022-6-1')).toDateString());
-  console.log('2022-06-01', new Date('2022-06-01'), Date.parse('2022-06-01'), (new Date('2022-06-01')).toDateString());
-  console.log('2022-06-1', new Date('2022-06-1'), Date.parse('2022-06-1'), (new Date('2022-06-1')).toDateString());
-  console.log('2022-6-01', new Date('2022-6-01'), Date.parse('2022-6-01'), (new Date('2022-6-01')).toDateString());
-  let re = /\d+/g, 
-    dateInput = req.body.date,
-    formatedDate,
+  const dateInput = req.body.date,
+    re = /\d+/g;
+  let formatedDate,
     y,
     m,
     d;
-  if (new Date(req.body.date) != 'Invalid Date') {
+  if (new Date(dateInput) != 'Invalid Date') {
     let x = dateInput.match(re);
-    console.log('huyyyy', x)
     y = x[0];
-    m = x[1].length === 1 ? `0${x[1]}` : x[1];
-    d = x[2].length === 1 ? `0${x[2]}` : x[2];
-    formatedDate = `${y}-${m}-${d}`;
+    m = x[1][0] === '0' ? `${x[1][1]}` : x[1];
+    d = x[2][0] === '0' ? `${x[2][1]}` : x[2];
+    formatedDate = new Date(`${y}-${m}-${d}`);
+  } else {
+    formatedDate = new Date(dateInput);
   }
-  
-  console.log('formatedDate', formatedDate);
-  //let dateInput = req.body.date,
-  //  y = parseInt(dateInput);
-  //dateInput = dateInput.slice(4);
-  //let m = parseInt(dateInput);
-  //dateInput = dateInput.slice(2);
-  //let d = parseInt(dateInput);
-  //console.log('heyyyy', y, m, d);
   const newLog = new Log({
       description: req.body.description,
       duration: req.body.duration,
@@ -150,10 +139,13 @@ app.get('/api/users', (req, res) => {
     // Each item in the log array that is returned from GET /api/users/:id/logs is an object that should have a description, duration, and date properties. DONE
     // The description property of any object in the log array that is returned from GET /api/users/:id/logs should be a string. DONE
     // The duration property of any object in the log array that is returned from GET /api/users/:id/logs should be a number. DONE
-    // The date property of any object in the log array that is returned from GET /api/users/:id/logs should be a string.. Use the dateString format of the Date API. TODO
+    // The date property of any object in the log array that is returned from GET /api/users/:id/logs should be a string.. Use the dateString format of the Date API. DONE
     // You can add from, to and limit parameters to a GET /api/users/:_id/logs request to retrieve part of the log of any user. from and to are dates in yyyy-mm-dd format. limit is an integer of how many logs to send back. TODO
 
-app.get('/api/users/:_id/logs', (req, res) => {
+app.get('/api/users/:_id/logs?/:from?:to?:limit?', (req, res) => {
+  // http://localhost:3000/api/users/62b26aa37bd40ffe6e9f4db0/logs?[2022-1-1][&2022-2-1][&5] MINE
+  // https://exercise-tracker.freecodecamp.rocks/api/users/62b33e9e179bfa0908269cc7/logs?[2022-1-1][&2022-2-1][&5] FCC
+  console.log('heyyyy', req.params);
   const id = req.params._id;
   User.find({_id: id}, '_id username count log', (err, doc) => {
     if (err) {
@@ -163,8 +155,21 @@ app.get('/api/users/:_id/logs', (req, res) => {
       console.log('doc is null', doc, req.params._id);
       res.json({error: 'user not found'});
     } else {
-      console.log('user found', doc);
-      res.json(doc[0]);
+      console.log('user found', doc[0], 'user logs', doc[0].log);
+      let x = doc[0].log.map((n) => {
+        return {
+          description: n.description, 
+          duration: n.duration,
+          date: n.date.toDateString()
+        }
+      });
+      let r = {
+        _id: doc[0]._id,
+        username: doc[0].username,
+        count: doc[0].count,
+        log: x
+      };
+      res.json(r);
     }
   });
 });
