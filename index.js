@@ -46,11 +46,6 @@ mongoose.connection.on('error', err => console.log('connection error >>>>> ', er
 
 // {"username":"Tezcatlipoca","_id":"62b26aa37bd40ffe6e9f4db0"} >> MINE
 // {"username":"tezcatlipoca","_id":"629b9c828413530938cc4700"} >> FCC
-
-// >> 
-   
-    //You can POST to /api/users with form data username to create a new user. DONE 
-    //The returned response from POST /api/users with form data username will be an object with username and _id properties. DONE
   
 app.post('/api/users/', (req, res) => {
   const user = new User({
@@ -62,11 +57,6 @@ app.post('/api/users/', (req, res) => {
     err ? res.json(err.message) : (console.log('doc saved!!', data), res.json({username: data.username, _id: data._id}));
   });
 });
-
-// >> 
-  
-    //You can POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied, the current date will be used. DONE
-    //The response returned from POST /api/users/:_id/exercises will be the user object with the exercise fields added. DONE
 
 app.post('/api/users/:_id/exercises', (req, res) => {
   const dateInput = req.body.date,
@@ -118,12 +108,6 @@ app.post('/api/users/:_id/exercises', (req, res) => {
     }
   });
 });
-
-// >> 
-  
-    //You can make a GET request to /api/users to get a list of all users. DONE
-    //The GET request to /api/users returns an array. DONE
-    //Each element in the array returned from GET /api/users is an object literal containing a user's username and _id. DONE
   
 app.get('/api/users', (req, res) => {
   User.find({}, 'username _id', (err, docs) => {
@@ -133,16 +117,9 @@ app.get('/api/users', (req, res) => {
 
 // >>
 
-    // You can make a GET request to /api/users/:_id/logs to retrieve a full exercise log of any user. DONE
-    // A request to a user's log GET /api/users/:_id/logs returns a user object with a count property representing the number of exercises that belong to that user. DONE
-    // A GET request to /api/users/:id/logs will return the user object with a log array of all the exercises added. DONE
-    // Each item in the log array that is returned from GET /api/users/:id/logs is an object that should have a description, duration, and date properties. DONE
-    // The description property of any object in the log array that is returned from GET /api/users/:id/logs should be a string. DONE
-    // The duration property of any object in the log array that is returned from GET /api/users/:id/logs should be a number. DONE
-    // The date property of any object in the log array that is returned from GET /api/users/:id/logs should be a string.. Use the dateString format of the Date API. DONE
     // You can add from, to and limit parameters to a GET /api/users/:_id/logs request to retrieve part of the log of any user. from and to are dates in yyyy-mm-dd format. limit is an integer of how many logs to send back. TODO
 
-app.get('/api/users/:_id/logs?/:from?:to?:limit?', (req, res) => {
+app.get('/api/users/:_id/logs?/:other?', (req, res) => {
   // http://localhost:3000/api/users/62b26aa37bd40ffe6e9f4db0/logs?[2022-1-1][&2022-2-1][&5] MINE
   // https://exercise-tracker.freecodecamp.rocks/api/users/62b33e9e179bfa0908269cc7/logs?[2022-1-1][&2022-2-1][&5] FCC
   console.log('heyyyy', req.params);
@@ -155,7 +132,7 @@ app.get('/api/users/:_id/logs?/:from?:to?:limit?', (req, res) => {
       console.log('doc is null', doc, req.params._id);
       res.json({error: 'user not found'});
     } else {
-      console.log('user found', doc[0], 'user logs', doc[0].log);
+      console.log('user found', doc[0]);
       let x = doc[0].log.map((n) => {
         return {
           description: n.description, 
